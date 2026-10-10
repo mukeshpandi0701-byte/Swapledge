@@ -37,7 +37,6 @@ const POPULAR_SKILLS = [
 
 export const LandingHero: React.FC<LandingHeroProps> = ({ onEnterApp }) => {
   const [activeSection, setActiveSection] = useState<LandingSection>('home');
-  const [searchText, setSearchText] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSideMenu, setShowSideMenu] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
@@ -45,11 +44,6 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onEnterApp }) => {
   const [email, setEmail] = useState('');
   const [department, setDepartment] = useState('Computer Science');
   const [contactSent, setContactSent] = useState(false);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onEnterApp(searchText.trim());
-  };
 
   const handleQuickAuth = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,12 +61,10 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onEnterApp }) => {
     onEnterApp();
   };
 
-  const sectionsOrder: LandingSection[] = ['home', 'courses', 'about', 'contact'];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#89dad0] via-[#9be4dc] to-[#7bc9c0] flex items-center justify-center p-4 md:p-10 font-sans">
-      {/* Main Elevated White Card */}
-      <div className="relative w-full max-w-6xl bg-white rounded-[28px] shadow-2xl overflow-hidden min-h-[620px] flex flex-col justify-between">
+    <div className="min-h-screen w-full bg-white font-sans">
+      {/* Full-Screen Container */}
+      <div className="relative w-full bg-white overflow-hidden min-h-screen flex flex-col justify-between">
         
         {/* Soft Blue Curved Background Shape on Right */}
         <div
@@ -160,72 +152,33 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onEnterApp }) => {
         </header>
 
         {/* ===================================================================== */}
-        {/* SECTION 1: HOME HERO VIEW                                             */}
+        {/* SECTION 1: HOME HERO VIEW (Clean without search bar/tags/dots)        */}
         {/* ===================================================================== */}
         {activeSection === 'home' && (
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 items-center px-8 md:px-14 py-8 gap-8 flex-1">
-            {/* Left Column: Text + Search Bar */}
+            {/* Left Column: Text + Clean Action Button */}
             <div className="lg:col-span-5 space-y-6">
               <p className="text-slate-500 text-base md:text-lg font-medium">
                 Campus peer education
               </p>
 
-              <h1 className="text-4xl md:text-5xl font-light text-slate-700 leading-tight">
+              <h1 className="text-4xl md:text-6xl font-light text-slate-700 leading-tight">
                 Start learning <br />
                 <span className="font-extrabold text-slate-800">at campus</span>
               </h1>
 
-              {/* Search Input Pill */}
-              <form
-                onSubmit={handleSearchSubmit}
-                className="flex items-center bg-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 pl-6 pr-2 py-2 max-w-md"
-              >
-                <input
-                  type="text"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="What skill are you looking for?"
-                  className="w-full text-sm text-slate-700 placeholder-slate-400 focus:outline-none bg-transparent"
-                />
+              <p className="text-sm text-slate-500 leading-relaxed max-w-md">
+                Connect with verified student mentors across departments, join collaborative study groups, and exchange skills 100% free.
+              </p>
+
+              <div className="pt-2">
                 <button
-                  type="submit"
-                  className="w-10 h-10 rounded-full bg-[#ffcf40] hover:bg-[#f5c024] flex items-center justify-center text-white shadow-sm transition shrink-0 cursor-pointer"
-                  title="Search Skills in Dashboard"
+                  onClick={() => onEnterApp()}
+                  className="inline-flex items-center gap-3 bg-[#7ed957] hover:bg-[#6ec847] text-white font-bold px-7 py-3.5 rounded-full shadow-md hover:shadow-lg transition text-sm cursor-pointer"
                 >
-                  <ArrowRight className="w-5 h-5" />
+                  <span>Explore Campus Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
-              </form>
-
-              {/* Quick Skill Suggestion Tags (Fills search input instead of jumping away) */}
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <span className="text-[11px] text-slate-400 font-medium">Popular:</span>
-                {['React', 'Python', 'UI/UX', 'Machine Learning'].map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => setSearchText(tag)}
-                    className="text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-teal-50 hover:text-teal-700 px-2.5 py-1 rounded-full transition"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-
-              {/* Interactive Carousel Dots (Switches between Home / Courses / About / Contact) */}
-              <div className="flex items-center gap-2.5 pt-6">
-                {sectionsOrder.map((sec) => (
-                  <button
-                    key={sec}
-                    type="button"
-                    onClick={() => setActiveSection(sec)}
-                    title={`View ${sec}`}
-                    className={
-                      activeSection === sec
-                        ? 'w-3 h-3 rounded-full bg-[#ffcf40] ring-2 ring-[#ffcf40]/40 transition'
-                        : 'w-2.5 h-2.5 rounded-full border border-slate-300 hover:border-slate-500 transition'
-                    }
-                  />
-                ))}
               </div>
             </div>
 
@@ -452,7 +405,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onEnterApp }) => {
         )}
 
         {/* ===================================================================== */}
-        {/* SECTION 2: COURSES PREVIEW (Stays inside Landing Card)                */}
+        {/* SECTION 2: COURSES PREVIEW                                            */}
         {/* ===================================================================== */}
         {activeSection === 'courses' && (
           <div className="relative z-10 px-8 md:px-14 py-6 flex-1 flex flex-col justify-center">
@@ -492,7 +445,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onEnterApp }) => {
                     </div>
                     <button
                       onClick={() => onEnterApp(item.title.split(' ')[0])}
-                      className="mt-4 text-xs font-bold text-teal-700 hover:text-teal-900 inline-flex items-center gap-1"
+                      className="mt-4 text-xs font-bold text-teal-700 hover:text-teal-900 inline-flex items-center gap-1 cursor-pointer"
                     >
                       Find Mentors for this Skill →
                     </button>
@@ -504,7 +457,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onEnterApp }) => {
         )}
 
         {/* ===================================================================== */}
-        {/* SECTION 3: ABOUT SWAPLEDGE (Stays inside Landing Card)                */}
+        {/* SECTION 3: ABOUT SWAPLEDGE                                            */}
         {/* ===================================================================== */}
         {activeSection === 'about' && (
           <div className="relative z-10 px-8 md:px-14 py-6 flex-1 flex flex-col justify-center">
@@ -556,7 +509,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onEnterApp }) => {
         )}
 
         {/* ===================================================================== */}
-        {/* SECTION 4: CONTACT US (Stays inside Landing Card)                     */}
+        {/* SECTION 4: CONTACT US                                                 */}
         {/* ===================================================================== */}
         {activeSection === 'contact' && (
           <div className="relative z-10 px-8 md:px-14 py-6 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -657,7 +610,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onEnterApp }) => {
           </div>
         )}
 
-        {/* Bottom Feature Strip inside Card (Informational Badges + Single Explicit CTA) */}
+        {/* Bottom Feature Strip */}
         <div className="relative z-10 border-t border-slate-100 bg-slate-50/70 px-8 md:px-14 py-4 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
           <div className="flex flex-wrap items-center gap-6">
             <button
@@ -752,7 +705,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onEnterApp }) => {
         </div>
       )}
 
-      {/* Sign Up / Login Modal when clicking Green "Sign up" button */}
+      {/* Sign Up / Login Modal */}
       {showAuthModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
