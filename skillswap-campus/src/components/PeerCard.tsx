@@ -1,39 +1,24 @@
 import { useState } from 'react';
 import {
   Star,
+  Clock,
   ShieldCheck,
   CalendarPlus,
-  Clock,
+  User,
   ChevronDown,
   ChevronUp,
   Info,
-  User,
-  GraduationCap,
+  BookOpen,
+  ExternalLink,
 } from 'lucide-react';
-import type { Student, AssessmentBadge } from '../types';
-import GitHubCard from './GitHubCard';
-import { getMatchExplanation, getMatchLabel } from '../utils/matchingAlgorithm';
+import { calculateMatchScore, getMatchLabel } from '../utils/matchingAlgorithm';
+import type { Student } from '../types';
 
 interface PeerCardProps {
   student: Student;
   activeUser: Student;
   onRequestSession: (student: Student) => void;
-  onViewProfile?: (student: Student) => void;
-}
-
-function BadgePill({ badge }: { badge: AssessmentBadge }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md font-medium border ${
-        badge.verified
-          ? 'bg-indigo-50 text-indigo-700 border-indigo-200/80'
-          : 'bg-slate-50 text-slate-600 border-slate-200'
-      }`}
-    >
-      {badge.verified && <ShieldCheck className="w-3 h-3 text-indigo-500" />}
-      {badge.skill}
-    </span>
-  );
+  onViewProfile: (student: Student) => void;
 }
 
 export default function PeerCard({
@@ -42,187 +27,265 @@ export default function PeerCard({
   onRequestSession,
   onViewProfile,
 }: PeerCardProps) {
-  const [whyOpen, setWhyOpen] = useState(false);
-  const match = getMatchExplanation(activeUser, student);
-  const { label: matchLabel, badgeClass, barColor } = getMatchLabel(match.score);
+  const [showWhy, setShowWhy] = useState(false);
 
-  const isVerifiedTrainer = student.trainerVerificationStatus === 'verified';
-  const isPendingTrainer = student.trainerVerificationStatus === 'pending';
+  const score = calculateMatchScore(activeUser, student);
+  const matchInfo = getMatchLabel(score);
+
+  // Built-in match breakdown calculation
+  const teachesWhatYouWant = student.teaches.filter((skill) =>
+    activeUser.wantsToLearn.some((w) => w.toLowerCase() === skill.toLowerCase())
+  );
+  const wantsWhatYouTeach = student.wantsToLearn.filter((skill) =>
+    activeUser.teaches.some((t) => t.toLowerCase() === skill.toLowerCase())
+  );
+  const sameDepartment = student.department === activeUser.department;
+
+  const isVerifiedTrainer =
+    student.trainerVerificationStatus === 'verified' || student.isVerified;
+
+  // Safe extraction of GitHub fields regardless of interface key naming
+  const gh = student.github as Record<string, any> | undefined;
+  const ghUsername = gh?.username || '';
+  const ghRepos = gh?.publicRepos ?? gh?.repos ?? gh?.repoCount ?? 0;
+  const ghStars = gh?.totalStars ?? gh?.stars ?? gh?.starCount ?? 0;
+  const ghLanguages: string[] = gh?.topLanguages ?? gh?.languages ?? gh?.stack ?? [];
+
+  const langDotColor = (lang: string) => {
+    const l = lang.toLowerCase();
+    if (l.includes('python')) return 'bg-emerald-500';
+    if (l.includes('type') || l.includes('ts')) return 'bg-sky-500';
+    if (l.includes('java') || l.includes('js') || l.includes('jupyter')) return 'bg-amber-500';
+    return 'bg-[#7ed957]';
+  };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 hover:border-slate-300 hover:shadow-md transition-all duration-200 flex flex-col p-5 text-slate-800">
-      {/* Top Profile Header */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <div className="relative shrink-0">
-            <img
-              src={student.avatar}
-              alt={student.name}
-              className="w-12 h-12 rounded-xl border border-slate-200 bg-slate-50 object-cover"
-            />
-            {isVerifiedTrainer && (
+    <div className="bg-white/95 backdrop-blur-xs border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+      <div>
+        {/* Top Row: Avatar, Name, Verified Badge & Match Score Box */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="relative shrink-0">
+              <img
+                src={student.avatar}
+                alt={student.name}
+                className="w-12 h-12 rounded-2xl object-cover bg-slate-100 border border-slate-200/60"
+              />
+              {isVerifiedTrainer && (
+                <span
+                  className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#7ed957] text-white flex items-center justify-center ring-2 ring-white"
+                  title="Verified Campus Trainer"
+                >
+                  <ShieldCheck className="w-3 h-3" />
+                </span>
+              )}
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <h3 className="text-sm font-bold text-slate-800 truncate">{student.name}</h3>
+                {isVerifiedTrainer && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#7ed957]/15 text-emerald-800 border border-[#7ed957]/40">
+                    <ShieldCheck className="w-2.5 h-2.5 text-emerald-700" />
+                    Verified Trainer
+                  </span>
+                )}
+              </div>
+
+              <p className="text-xs text-slate-500 mt-0.5 truncate">
+                🎓 {student.department} · Yr {student.year}
+              </p>
+
+              <div className="flex items-center gap-1 mt-1">
+                <Star className="w-3.5 h-3.5 text-[#ffcf40] fill-[#ffcf40]" />
+                <span className="text-xs font-bold text-slate-800">{student.rating.toFixed(1)}</span>
+                <span className="text-[11px] text-slate-400">
+                  ({student.reviewCount} learner reviews)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Match Score Box (Lime-Green Bar Theme) */}
+          <div className="shrink-0 bg-[#7ed957]/15 border border-[#7ed957]/40 rounded-xl px-2.5 py-1.5 text-right min-w-[78px]">
+            <span className="text-xs font-extrabold text-emerald-800 block leading-none">
+              {score}%
+            </span>
+            <span className="text-[10px] font-bold text-emerald-700 block mt-0.5">
+              {matchInfo.label}
+            </span>
+            <div className="w-full h-1 bg-white/90 rounded-full overflow-hidden mt-1.5">
+              <div
+                className="h-full bg-[#7ed957] rounded-full transition-all"
+                style={{ width: `${score}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Availability Pill */}
+        {student.availability && (
+          <div className="mt-3.5 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-[11px] font-semibold text-slate-600">
+            <Clock className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+            <span className="truncate">{student.availability}</span>
+          </div>
+        )}
+
+        {/* Bio */}
+        <p className="mt-3 text-xs text-slate-600 line-clamp-2 leading-relaxed">{student.bio}</p>
+
+        {/* Collapsible "Why this match?" */}
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => setShowWhy((prev) => !prev)}
+            className="w-full flex items-center justify-between text-[11px] font-semibold text-slate-600 hover:text-teal-800 py-1 cursor-pointer"
+          >
+            <span className="flex items-center gap-1">
+              <Info className="w-3.5 h-3.5 text-[#7ed957]" />
+              Why this match?
+            </span>
+            {showWhy ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+
+          {showWhy && (
+            <div className="mt-1.5 p-2.5 rounded-xl bg-[#7ed957]/10 border border-[#7ed957]/30 text-[11px] text-slate-600 space-y-1">
+              {teachesWhatYouWant.length > 0 && (
+                <p>
+                  ✅ Teaches skills you want:{' '}
+                  <span className="font-bold text-slate-800">
+                    {teachesWhatYouWant.join(', ')}
+                  </span>
+                </p>
+              )}
+              {wantsWhatYouTeach.length > 0 && (
+                <p>
+                  🔄 Wants to learn from you:{' '}
+                  <span className="font-bold text-slate-800">
+                    {wantsWhatYouTeach.join(', ')}
+                  </span>
+                </p>
+              )}
+              {sameDepartment && <p>🏛️ Same department ({student.department})</p>}
+              {teachesWhatYouWant.length === 0 &&
+                wantsWhatYouTeach.length === 0 &&
+                !sameDepartment && (
+                  <p>✨ Active campus peer mentor with high learner ratings</p>
+                )}
+            </div>
+          )}
+        </div>
+
+        {/* CAN TEACH Skills */}
+        <div className="mt-3">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+            Can Teach
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {student.teaches.map((skill) => (
               <span
-                title="Verified Campus Trainer"
-                className="absolute -bottom-1 -right-1 bg-emerald-600 text-white rounded-full p-0.5 shadow-xs"
+                key={skill}
+                className="px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-[#7ed957]/15 text-emerald-800 border border-[#7ed957]/30"
               >
-                <ShieldCheck className="w-3 h-3" />
+                {skill}
               </span>
+            ))}
+          </div>
+        </div>
+
+        {/* WANTS TO LEARN Skills */}
+        <div className="mt-3">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+            Wants to Learn
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {student.wantsToLearn.map((skill) => (
+              <span
+                key={skill}
+                className="px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-[#eaf5ff] text-teal-800 border border-teal-200/60"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Earned Verification Badges */}
+        {student.badges && student.badges.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {student.badges.map((b) => (
+              <span
+                key={b.skill}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-[#7ed957]/12 text-emerald-800 border border-[#7ed957]/30"
+              >
+                <ShieldCheck className="w-3 h-3 text-[#7ed957]" />
+                {b.skill}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* GitHub Portfolio Box */}
+        {gh && ghUsername && (
+          <div className="mt-3.5 p-3 rounded-xl bg-slate-50/90 border border-slate-200/70">
+            <div className="flex items-center justify-between text-xs">
+              <a
+                href={`https://github.com/${ghUsername}`}
+                target="_blank"
+                rel="noreferrer"
+                className="font-bold text-slate-700 hover:text-teal-700 inline-flex items-center gap-1"
+              >
+                @{ghUsername}
+                <ExternalLink className="w-3 h-3 text-slate-400" />
+              </a>
+
+              <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                <span className="inline-flex items-center gap-1">
+                  <BookOpen className="w-3 h-3 text-slate-400" />
+                  <strong className="text-slate-700">{ghRepos}</strong> repos
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Star className="w-3 h-3 text-[#ffcf40] fill-[#ffcf40]" />
+                  <strong className="text-slate-700">{ghStars}</strong> stars
+                </span>
+              </div>
+            </div>
+
+            {ghLanguages.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 mr-1">
+                  &lt;/&gt; Stack:
+                </span>
+                {ghLanguages.map((lang) => (
+                  <span
+                    key={lang}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-slate-200/80 text-[10px] font-medium text-slate-600"
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${langDotColor(lang)}`} />
+                    {lang}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
-
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h3 className="text-sm font-bold text-slate-900 truncate leading-snug">{student.name}</h3>
-              {isVerifiedTrainer && (
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-600" /> Verified Trainer
-                </span>
-              )}
-              {isPendingTrainer && (
-                <span className="text-[10px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md">
-                  Pending Verification
-                </span>
-              )}
-            </div>
-
-            <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-              <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span className="truncate">{student.department} · Yr {student.year}</span>
-            </p>
-
-            {/* Rating & Reviews */}
-            <div className="flex items-center gap-1.5 mt-1 text-xs">
-              <div className="flex items-center text-amber-500">
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                <span className="ml-1 font-bold text-slate-800 text-[11px]">{student.rating.toFixed(1)}</span>
-              </div>
-              <span className="text-slate-400 text-[11px]">({student.reviewCount} learner reviews)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Compatibility Match Meter Badge */}
-        <div className={`shrink-0 flex flex-col items-end text-right px-2.5 py-1.5 rounded-xl border ${badgeClass}`}>
-          <div className="flex items-center gap-1">
-            <span className="text-xs font-bold leading-none">{match.score}%</span>
-          </div>
-          <span className="text-[10px] font-semibold mt-0.5 tracking-tight">{matchLabel}</span>
-          <div className="w-12 bg-slate-200/70 h-1 rounded-full mt-1.5 overflow-hidden">
-            <div className={`h-full rounded-full ${barColor}`} style={{ width: `${match.score}%` }} />
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Availability Pill */}
-      {student.availability && (
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 mb-3">
-          <Clock className="w-3 h-3 text-slate-400 shrink-0" />
-          <span className="truncate font-medium">{student.availability}</span>
-        </div>
-      )}
-
-      {/* Short Bio */}
-      <p className="text-xs text-slate-600 mb-3 leading-relaxed line-clamp-2">{student.bio}</p>
-
-      {/* "Why this match?" Interactive Drawer */}
-      <div className="mb-3">
+      {/* Bottom Action Buttons (Updated Request Session to #7ed957 Lime Green) */}
+      <div className="mt-5 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2.5">
         <button
           type="button"
-          onClick={() => setWhyOpen(!whyOpen)}
-          className="w-full flex items-center justify-between text-[11px] font-semibold text-slate-500 hover:text-indigo-600 py-1 transition-colors"
+          onClick={() => onViewProfile(student)}
+          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-slate-200/90 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer"
         >
-          <span className="flex items-center gap-1">
-            <Info className="w-3 h-3 text-indigo-500" />
-            Why this match?
-          </span>
-          {whyOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          <User className="w-3.5 h-3.5" />
+          View Profile
         </button>
 
-        {whyOpen && (
-          <div className="mt-1.5 p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80 text-[11px] space-y-1.5 animate-fade-in">
-            <p className="text-slate-700 font-medium leading-relaxed">{match.summary}</p>
-            <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-200/60 space-y-0.5">
-              <div>
-                <span className="font-semibold text-slate-600">They teach:</span>{' '}
-                {match.directMatches.length > 0
-                  ? `${match.directMatches.join(', ')} (+25% each)`
-                  : 'No direct wishlist match'}
-              </div>
-              <div>
-                <span className="font-semibold text-slate-600">You teach:</span>{' '}
-                {match.reciprocalMatches.length > 0
-                  ? `${match.reciprocalMatches.join(', ')} (+15% reciprocal bonus)`
-                  : 'No reciprocal overlap'}
-              </div>
-              {match.sharedDepartment && (
-                <div className="text-indigo-600 font-medium">Shared Department (+10% synergy)</div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Teaches Skills */}
-      <div className="mb-2">
-        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1 block">Can Teach</span>
-        <div className="flex flex-wrap gap-1">
-          {student.teaches.map((skill) => (
-            <span
-              key={skill}
-              className="text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200/70 px-2 py-0.5 rounded-md font-medium"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Wants to Learn Skills */}
-      <div className="mb-3">
-        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1 block">Wants to Learn</span>
-        <div className="flex flex-wrap gap-1">
-          {student.wantsToLearn.map((skill) => (
-            <span
-              key={skill}
-              className="text-[11px] bg-indigo-50 text-indigo-800 border border-indigo-200/70 px-2 py-0.5 rounded-md font-medium"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Assessment Badges if any */}
-      {student.badges.length > 0 && (
-        <div className="mb-3 flex flex-wrap gap-1">
-          {student.badges.map((b) => (
-            <BadgePill key={b.skill} badge={b} />
-          ))}
-        </div>
-      )}
-
-      {/* GitHub Card */}
-      {student.github && (
-        <div className="mb-4">
-          <GitHubCard stats={student.github} compact />
-        </div>
-      )}
-
-      {/* Card Actions Footer */}
-      <div className="mt-auto pt-3 border-t border-slate-100 flex items-center gap-2">
-        {onViewProfile && (
-          <button
-            onClick={() => onViewProfile(student)}
-            className="flex-1 inline-flex items-center justify-center gap-1 text-xs font-semibold py-2 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors"
-          >
-            <User className="w-3.5 h-3.5 text-slate-400" />
-            View Profile
-          </button>
-        )}
-
         <button
+          type="button"
           onClick={() => onRequestSession(student)}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white shadow-xs transition-all"
+          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#7ed957] hover:bg-[#6ec847] text-white text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
         >
           <CalendarPlus className="w-3.5 h-3.5" />
           Request Session
