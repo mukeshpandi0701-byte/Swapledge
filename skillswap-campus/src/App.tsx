@@ -4,7 +4,6 @@ import PeerCard from './components/PeerCard';
 import PeerFilter from './components/PeerFilter';
 import BookingModal from './components/BookingModal';
 import SessionsView from './components/SessionsView';
-import { StudyGroupsView } from './components/StudyGroupsView';
 import GroupCard from './components/GroupCard';
 import AssessmentView from './components/AssessmentView';
 import { ACTIVE_USER, MOCK_STUDENTS, INITIAL_SESSIONS, INITIAL_GROUPS, QUIZZES } from './data/mockData';
@@ -178,7 +177,7 @@ export default function App() {
   const pendingCount = sessions.filter((s) => s.status === 'pending' && s.peerId === activeUser.id).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans antialiased text-slate-900 selection:bg-indigo-500 selection:text-white">
       <Navbar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -187,13 +186,23 @@ export default function App() {
         onSearchChange={setSearchQuery}
       />
 
-      {/* Notification banner for pending requests */}
+      {/* Modern Centered Notification Banner */}
       {pendingCount > 0 && activeTab !== 'sessions' && (
-        <div
-          className="bg-indigo-600 text-white text-center text-sm py-2 px-4 cursor-pointer hover:bg-indigo-700 transition"
-          onClick={() => setActiveTab('sessions')}
-        >
-          📬 You have <strong>{pendingCount}</strong> pending session request{pendingCount > 1 ? 's' : ''} — click to review
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5">
+          <div className="bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-xl px-4 py-2.5 text-xs sm:text-sm shadow-sm flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse shrink-0" />
+              <span className="text-slate-700">
+                You have <strong className="font-semibold text-slate-900">{pendingCount} pending session request{pendingCount > 1 ? 's' : ''}</strong> awaiting your response.
+              </span>
+            </div>
+            <button
+              onClick={() => setActiveTab('sessions')}
+              className="shrink-0 text-xs font-bold text-indigo-700 hover:text-indigo-900 transition underline underline-offset-2 cursor-pointer"
+            >
+              Review now →
+            </button>
+          </div>
         </div>
       )}
 
@@ -201,10 +210,12 @@ export default function App() {
         {/* ── EXPLORE PEERS ── */}
         {activeTab === 'explore' && (
           <div>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-slate-800">Explore Peers</h1>
-              <p className="text-sm text-slate-500 mt-1">
-                Sorted by <span className="text-indigo-600 font-medium">compatibility match</span> — peers who teach what you want to learn appear first.
+            <div className="mb-8">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+                Explore Peers
+              </h1>
+              <p className="text-sm font-normal text-slate-500 mt-1.5">
+                Sorted by <span className="font-semibold text-indigo-600">compatibility match</span> — students offering skills you want to learn appear first.
               </p>
             </div>
 
@@ -216,15 +227,23 @@ export default function App() {
             />
 
             {filteredStudents.length === 0 ? (
-              <div className="text-center py-20 text-slate-400">
-                <div className="text-5xl mb-4">🔍</div>
-                <p className="font-medium text-slate-500">No peers match your filters</p>
-                <p className="text-sm mt-1">Try adjusting your search or clearing filters.</p>
+              <div className="bg-white rounded-2xl border border-slate-200/90 p-12 text-center shadow-sm max-w-lg mx-auto">
+                <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl mx-auto mb-4">
+                  🔍
+                </div>
+                <h3 className="font-bold text-slate-800 text-base">No peers match your filters</h3>
+                <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                  Try broadening your search term or clearing one of the skill filters.
+                </p>
               </div>
             ) : (
               <>
-                <p className="text-xs text-slate-400 mb-4">{filteredStudents.length} peer{filteredStudents.length !== 1 ? 's' : ''} found</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Showing {filteredStudents.length} Available Peer{filteredStudents.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {filteredStudents.map((student) => (
                     <PeerCard
                       key={student.id}
@@ -242,9 +261,13 @@ export default function App() {
         {/* ── MY SESSIONS ── */}
         {activeTab === 'sessions' && (
           <div>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-slate-800">My Sessions</h1>
-              <p className="text-sm text-slate-500 mt-1">Track upcoming, pending, and completed learning sessions.</p>
+            <div className="mb-8">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+                My Sessions
+              </h1>
+              <p className="text-sm font-normal text-slate-500 mt-1.5">
+                Manage upcoming tutoring appointments, pending incoming requests, and history.
+              </p>
             </div>
             <SessionsView
               sessions={sessions}
@@ -259,11 +282,15 @@ export default function App() {
         {/* ── STUDY GROUPS ── */}
         {activeTab === 'groups' && (
           <div>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-slate-800">Study Groups</h1>
-              <p className="text-sm text-slate-500 mt-1">Join subject-based groups to share resources and collaborate.</p>
+            <div className="mb-8">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+                Campus Study Groups
+              </h1>
+              <p className="text-sm font-normal text-slate-500 mt-1.5">
+                Join subject-specific student circles to access curated resource notes, code repos, and guides.
+              </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {groups.map((group) => (
                 <GroupCard
                   key={group.id}
@@ -279,12 +306,14 @@ export default function App() {
 
         {/* ── ASSESSMENT ── */}
         {activeTab === 'assessment' && (
-          <AssessmentView
-            quizzes={QUIZZES}
-            activeUser={activeUser}
-            completedQuizzes={completedQuizzes}
-            onQuizComplete={handleQuizComplete}
-          />
+          <div>
+            <AssessmentView
+              quizzes={QUIZZES}
+              activeUser={activeUser}
+              completedQuizzes={completedQuizzes}
+              onQuizComplete={handleQuizComplete}
+            />
+          </div>
         )}
       </main>
 
