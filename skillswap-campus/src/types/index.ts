@@ -1,5 +1,21 @@
 // ─── Core Domain Types ───────────────────────────────────────────────────────
 
+export type UserMode = 'learner' | 'trainer';
+
+export type TrainerVerificationStatus = 'not_started' | 'pending' | 'verified' | 'rejected';
+
+export interface TrainerApplication {
+  status: TrainerVerificationStatus;
+  appliedAt?: string;
+  reviewedAt?: string;
+  skills: string[];
+  teachingBio: string;
+  portfolioUrl?: string;
+  experienceLevel: 'Beginner' | 'Intermediate' | 'Advanced';
+  availability: string;
+  rejectionReason?: string;
+}
+
 export interface GitHubStats {
   username: string;
   publicRepos: number;
@@ -31,6 +47,10 @@ export interface Student {
   badges: AssessmentBadge[];
   isVerified: boolean;
   joinedAt: string;
+  availability?: string;
+  completedSessionsCount?: number;
+  trainerVerificationStatus?: TrainerVerificationStatus;
+  trainerApplication?: TrainerApplication;
 }
 
 // ─── Session Booking Types ────────────────────────────────────────────────────
@@ -118,6 +138,28 @@ export interface QuizResult {
   completedAt: string;
 }
 
+// ─── Notification Types ───────────────────────────────────────────────────────
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  type: 'session' | 'badge' | 'group' | 'system' | 'trainer';
+  read: boolean;
+  targetTab?: ActiveTab;
+}
+
+// ─── Matching Explanation ─────────────────────────────────────────────────────
+
+export interface MatchExplanation {
+  score: number;
+  directMatches: string[];     // skills peer teaches that active user wants
+  reciprocalMatches: string[]; // skills active user teaches that peer wants
+  sharedDepartment: boolean;
+  summary: string;
+}
+
 // ─── UI / Filter State Types ──────────────────────────────────────────────────
 
 export interface PeerFilters {
@@ -126,7 +168,18 @@ export interface PeerFilters {
   skillOffered: string;
   skillWanted: string;
   verifiedOnly: boolean;
+  availabilityFilter: string;
+  sortOption: 'compatibility' | 'rating' | 'reviews' | 'name';
 }
 
-export type ActiveTab = 'explore' | 'sessions' | 'groups' | 'assessment';
-export type SessionTab = 'upcoming' | 'pending' | 'completed';
+export type LearnerTab = 'explore' | 'sessions' | 'groups' | 'assessment' | 'progress';
+export type TrainerTab =
+  | 'trainer_dashboard'
+  | 'teaching_skills'
+  | 'incoming_requests'
+  | 'teaching_sessions'
+  | 'verification'
+  | 'feedback';
+
+export type ActiveTab = LearnerTab | TrainerTab;
+export type SessionTab = 'upcoming' | 'pending' | 'completed' | 'declined';

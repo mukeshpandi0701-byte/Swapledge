@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Star } from 'lucide-react';
+import { X, Star, CheckCircle2 } from 'lucide-react';
 import type { SessionRequest, SessionReview } from '../types';
 
 interface ReviewModalProps {
@@ -9,7 +9,7 @@ interface ReviewModalProps {
 }
 
 export default function ReviewModal({ session, onClose, onSubmit }: ReviewModalProps) {
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(5);
   const [hovered, setHovered] = useState(0);
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -19,43 +19,65 @@ export default function ReviewModal({ session, onClose, onSubmit }: ReviewModalP
     if (rating === 0) return;
     const review: SessionReview = {
       rating,
-      comment,
+      comment: comment.trim(),
       reviewedAt: new Date().toISOString(),
     };
     onSubmit(session.id, review);
     setSubmitted(true);
-    setTimeout(onClose, 1600);
+    setTimeout(onClose, 1400);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-xl border border-slate-200/90 w-full max-w-sm overflow-hidden text-slate-800"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h2 className="text-base font-bold text-slate-800">Rate Your Session</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition">
-            <X className="w-5 h-5" />
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 leading-tight">Rate Peer Learning Session</h3>
+            <p className="text-[11px] text-slate-500">with {session.peerName}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 transition-colors"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {submitted ? (
-          <div className="px-6 py-12 flex flex-col items-center text-center gap-3">
-            <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center text-3xl">⭐</div>
-            <h3 className="text-lg font-bold text-slate-800">Thanks for your review!</h3>
-            <p className="text-sm text-slate-500">Your feedback helps the SkillSwap community grow.</p>
+          <div className="px-6 py-10 flex flex-col items-center text-center gap-3">
+            <div className="w-14 h-14 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-slate-900">Review Submitted</h4>
+              <p className="text-xs text-slate-500 mt-1">
+                Thank you for contributing to campus peer reputation and community trust.
+              </p>
+            </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-5">
-            {/* Session info */}
-            <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-              <p className="text-xs text-slate-500">Session with</p>
-              <p className="text-sm font-semibold text-slate-800">{session.peerName}</p>
-              <p className="text-xs text-indigo-600 mt-0.5">{session.skill} · {session.date}</p>
+          <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+            {/* Session info callout */}
+            <div className="bg-slate-50/70 rounded-xl p-3 border border-slate-100 text-xs">
+              <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Completed Session</p>
+              <p className="font-bold text-slate-800 mt-0.5">{session.skill}</p>
+              <p className="text-slate-500 text-[11px] mt-0.5">{session.date} · {session.timeSlot}</p>
             </div>
 
             {/* Star Rating */}
             <div>
-              <p className="text-xs font-semibold text-slate-600 mb-2">How would you rate this session?</p>
+              <label className="block text-center text-xs font-semibold text-slate-700 mb-2">
+                Overall Session Rating
+              </label>
               <div className="flex items-center gap-1.5 justify-center">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <button
@@ -64,43 +86,44 @@ export default function ReviewModal({ session, onClose, onSubmit }: ReviewModalP
                     onClick={() => setRating(i)}
                     onMouseEnter={() => setHovered(i)}
                     onMouseLeave={() => setHovered(0)}
-                    className="transition-transform hover:scale-110"
+                    className="p-1 rounded-lg transition-transform hover:scale-115"
+                    aria-label={`Rate ${i} stars`}
                   >
                     <Star
-                      className={`w-9 h-9 transition-colors ${
-                        i <= (hovered || rating) ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200'
+                      className={`w-7 h-7 transition-colors ${
+                        i <= (hovered || rating)
+                          ? 'text-amber-500 fill-amber-400'
+                          : 'text-slate-200 fill-slate-100'
                       }`}
                     />
                   </button>
                 ))}
               </div>
-              {rating > 0 && (
-                <p className="text-center text-xs text-slate-500 mt-1.5">
-                  {['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent!'][rating]}
-                </p>
-              )}
+              <p className="text-center text-[11px] font-bold text-slate-600 mt-1.5">
+                {['', 'Needs Improvement', 'Fair Session', 'Good Learning', 'Great Mentor', 'Outstanding Session!'][hovered || rating]}
+              </p>
             </div>
 
             {/* Comment */}
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                Comments <span className="font-normal text-slate-400">(optional)</span>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                Peer Feedback <span className="font-normal text-slate-400 lowercase">(optional)</span>
               </label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Tell others about your experience…"
+                placeholder="Share your experience to help other campus peers…"
                 rows={3}
-                className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-700 resize-none"
+                className="w-full text-xs border border-slate-200 rounded-xl px-3 py-2 bg-slate-50/70 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 resize-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={rating === 0}
-              className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all active:scale-95"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-xs shadow-xs transition-all active:scale-98"
             >
-              Submit Review
+              Submit Peer Review
             </button>
           </form>
         )}

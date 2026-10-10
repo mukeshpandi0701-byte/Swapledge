@@ -1,5 +1,21 @@
 import { useState } from 'react';
-import { Users, Plus, X, FileText, Link, Code, StickyNote, ExternalLink } from 'lucide-react';
+import {
+  Users,
+  Plus,
+  X,
+  FileText,
+  Link as LinkIcon,
+  Code,
+  StickyNote,
+  ExternalLink,
+  BookOpen,
+  Terminal,
+  Cpu,
+  Globe,
+  Cloud,
+  Layers,
+  Check,
+} from 'lucide-react';
 import type { StudyGroup, GroupResource } from '../types';
 
 interface GroupCardProps {
@@ -9,12 +25,29 @@ interface GroupCardProps {
   onAddResource: (groupId: string, resource: GroupResource) => void;
 }
 
-const RESOURCE_ICONS = {
-  pdf: <FileText className="w-4 h-4 text-rose-500" />,
-  link: <Link className="w-4 h-4 text-indigo-500" />,
-  code: <Code className="w-4 h-4 text-emerald-500" />,
-  note: <StickyNote className="w-4 h-4 text-amber-500" />,
+const RESOURCE_ICONS: Record<GroupResource['type'], React.ReactNode> = {
+  pdf: <FileText className="w-3.5 h-3.5 text-rose-500" />,
+  link: <LinkIcon className="w-3.5 h-3.5 text-indigo-500" />,
+  code: <Code className="w-3.5 h-3.5 text-emerald-500" />,
+  note: <StickyNote className="w-3.5 h-3.5 text-amber-500" />,
 };
+
+function getGroupIcon(icon: string) {
+  switch (icon.toLowerCase()) {
+    case 'terminal':
+      return <Terminal className="w-5 h-5 text-emerald-600" />;
+    case 'cpu':
+      return <Cpu className="w-5 h-5 text-indigo-600" />;
+    case 'globe':
+      return <Globe className="w-5 h-5 text-sky-600" />;
+    case 'cloud':
+      return <Cloud className="w-5 h-5 text-amber-600" />;
+    case 'layers':
+      return <Layers className="w-5 h-5 text-rose-600" />;
+    default:
+      return <BookOpen className="w-5 h-5 text-indigo-600" />;
+  }
+}
 
 function AddResourceModal({
   groupName,
@@ -34,8 +67,8 @@ function AddResourceModal({
     if (!title.trim() || !url.trim()) return;
     onAdd({
       id: `res-${Date.now()}`,
-      title,
-      url,
+      title: title.trim(),
+      url: url.trim(),
       type,
       addedBy: 'Alex Johnson',
       addedAt: new Date().toISOString(),
@@ -44,163 +77,234 @@ function AddResourceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-xl border border-slate-200/90 w-full max-w-sm overflow-hidden text-slate-800"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-          <h2 className="font-bold text-slate-800 text-sm">Add Resource to "{groupName}"</h2>
-          <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition">
+          <div>
+            <h3 className="font-bold text-slate-900 text-sm">Add Learning Resource</h3>
+            <p className="text-[11px] text-slate-500">Shared to "{groupName}"</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
-        <form onSubmit={handleAdd} className="p-5 flex flex-col gap-3">
+
+        <form onSubmit={handleAdd} className="p-5 flex flex-col gap-3.5">
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Resource Type</label>
-            <div className="grid grid-cols-4 gap-2">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+              Resource Type
+            </label>
+            <div className="grid grid-cols-4 gap-1.5">
               {(['link', 'pdf', 'code', 'note'] as GroupResource['type'][]).map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setType(t)}
-                  className={`flex flex-col items-center gap-1 py-2 rounded-lg border text-xs font-medium transition ${
-                    type === t ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                  className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl border text-[11px] font-semibold transition-all ${
+                    type === t
+                      ? 'border-indigo-600 bg-indigo-50/70 text-indigo-700 shadow-2xs'
+                      : 'border-slate-200 text-slate-600 hover:border-slate-300'
                   }`}
                 >
                   {RESOURCE_ICONS[t]}
-                  {t}
+                  <span className="capitalize">{t}</span>
                 </button>
               ))}
             </div>
           </div>
+
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Title</label>
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+              Title
+            </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Python Cheat Sheet"
+              placeholder="e.g. Stanford CS229 Lecture Notes"
               required
-              className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-700"
+              className="w-full text-xs border border-slate-200 rounded-xl px-3 py-2 bg-slate-50/70 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800"
             />
           </div>
+
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">URL</label>
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+              URL / Link
+            </label>
             <input
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://…"
               required
-              className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-700"
+              className="w-full text-xs border border-slate-200 rounded-xl px-3 py-2 bg-slate-50/70 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800"
             />
           </div>
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl text-sm transition active:scale-95"
-          >
-            Add Resource
-          </button>
+
+          <div className="pt-2 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 rounded-xl"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs shadow-xs transition-colors"
+            >
+              Share Resource
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
 }
 
-export default function GroupCard({ group, isMember, onToggleMembership, onAddResource }: GroupCardProps) {
+export default function GroupCard({
+  group,
+  isMember,
+  onToggleMembership,
+  onAddResource,
+}: GroupCardProps) {
   const [showResources, setShowResources] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
 
   return (
     <>
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200">
-        {/* Gradient Header */}
-        <div className={`bg-gradient-to-r ${group.color} p-5`}>
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-3xl mb-2 block">{group.icon}</span>
-              <h3 className="text-white font-bold text-base leading-tight">{group.name}</h3>
-              <p className="text-white/80 text-xs mt-0.5">{group.subject}</p>
+      <div className="bg-white rounded-2xl border border-slate-200/90 hover:border-slate-300 hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden text-slate-800">
+        {/* Card Header */}
+        <div className="p-5 pb-4 border-b border-slate-100 flex items-start justify-between gap-3 bg-linear-to-b from-slate-50/70 to-white">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-center shrink-0">
+              {getGroupIcon(group.icon)}
             </div>
-            <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2.5 py-1.5 rounded-xl">
-              <Users className="w-3.5 h-3.5 text-white" />
-              <span className="text-white text-xs font-semibold">{group.memberCount + (isMember ? 1 : 0)}</span>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-slate-900 leading-tight truncate">{group.name}</h3>
+              <p className="text-[11px] font-semibold text-indigo-600 mt-0.5">{group.subject}</p>
             </div>
+          </div>
+
+          {/* Member count badge */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold shrink-0">
+            <Users className="w-3.5 h-3.5 text-slate-400" />
+            <span>{group.memberCount + (isMember ? 1 : 0)}</span>
           </div>
         </div>
 
-        {/* Body */}
-        <div className="p-4 flex flex-col gap-3">
-          <p className="text-sm text-slate-500 leading-relaxed">{group.description}</p>
+        {/* Card Body */}
+        <div className="p-5 flex-1 flex flex-col justify-between gap-4">
+          <div>
+            <p className="text-xs text-slate-600 leading-relaxed mb-3 line-clamp-2">{group.description}</p>
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1.5">
-            {group.tags.map((tag) => (
-              <span key={tag} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
-                {tag}
-              </span>
-            ))}
+            {/* Subject Tags */}
+            <div className="flex flex-wrap gap-1">
+              {group.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-[10px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-2 mt-1">
-            <button
-              onClick={() => onToggleMembership(group.id)}
-              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                isMember
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200'
-                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
-              }`}
-            >
-              {isMember ? '✓ Joined' : 'Join Group'}
-            </button>
-
-            <button
-              onClick={() => setShowResources(!showResources)}
-              className="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm transition"
-            >
-              📚 {group.resources.length}
-            </button>
-
-            {isMember && (
+          {/* Action Row */}
+          <div>
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
               <button
-                onClick={() => setShowAddModal(true)}
-                className="px-3 py-2 rounded-xl border border-indigo-200 text-indigo-600 hover:bg-indigo-50 text-sm transition"
+                onClick={() => onToggleMembership(group.id)}
+                className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
+                  isMember
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200'
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs'
+                }`}
               >
-                <Plus className="w-4 h-4" />
+                {isMember ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" /> Joined
+                  </>
+                ) : (
+                  'Join Group'
+                )}
               </button>
-            )}
-          </div>
 
-          {/* Resource Feed */}
-          {showResources && (
-            <div className="border border-slate-100 rounded-xl overflow-hidden mt-1">
-              <div className="bg-slate-50 px-3 py-2 border-b border-slate-100">
-                <p className="text-xs font-semibold text-slate-600">Resources ({group.resources.length})</p>
-              </div>
-              {group.resources.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-4">No resources yet. Be the first!</p>
-              ) : (
-                <div className="divide-y divide-slate-100">
-                  {group.resources.map((res) => (
-                    <div key={res.id} className="flex items-center gap-2 px-3 py-2.5 hover:bg-slate-50 transition">
-                      {RESOURCE_ICONS[res.type]}
-                      <div className="flex-1 min-w-0">
-                        <a
-                          href={res.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-medium text-slate-700 hover:text-indigo-600 flex items-center gap-1 truncate"
-                        >
-                          {res.title}
-                          <ExternalLink className="w-3 h-3 shrink-0" />
-                        </a>
-                        <p className="text-[10px] text-slate-400">by {res.addedBy}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <button
+                onClick={() => setShowResources(!showResources)}
+                className={`inline-flex items-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-semibold transition-colors ${
+                  showResources
+                    ? 'border-indigo-300 bg-indigo-50/60 text-indigo-700'
+                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+                aria-label={`Toggle resources, ${group.resources.length} available`}
+              >
+                <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                <span>{group.resources.length}</span>
+              </button>
+
+              {isMember && (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="p-2 rounded-xl border border-indigo-200 bg-indigo-50/50 text-indigo-600 hover:bg-indigo-100/70 transition-colors"
+                  title="Add learning resource"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
               )}
             </div>
-          )}
+
+            {/* Expandable Resource Feed */}
+            {showResources && (
+              <div className="mt-3 border border-slate-200/80 rounded-xl overflow-hidden bg-slate-50/50 animate-fade-in">
+                <div className="bg-slate-100/80 px-3 py-2 border-b border-slate-200/60 flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    Shared Learning Material
+                  </span>
+                  <span className="text-[10px] text-slate-400">{group.resources.length} items</span>
+                </div>
+
+                {group.resources.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-4">No resources yet. Be the first to share!</p>
+                ) : (
+                  <div className="divide-y divide-slate-100">
+                    {group.resources.map((res) => (
+                      <div
+                        key={res.id}
+                        className="p-2.5 px-3 hover:bg-white transition-colors flex items-center gap-2.5"
+                      >
+                        <span className="shrink-0">{RESOURCE_ICONS[res.type]}</span>
+                        <div className="flex-1 min-w-0">
+                          <a
+                            href={res.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-semibold text-slate-800 hover:text-indigo-600 flex items-center gap-1 truncate"
+                          >
+                            <span className="truncate">{res.title}</span>
+                            <ExternalLink className="w-3 h-3 shrink-0 text-slate-400" />
+                          </a>
+                          <p className="text-[10px] text-slate-400">Added by {res.addedBy}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
