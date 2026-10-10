@@ -24,14 +24,14 @@ export default function Navbar({ activeTab, onTabChange, activeUser, searchQuery
     <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
-          {/* Logo */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-emerald-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">SS</span>
+          {/* Logo - Updated to SwapLedge */}
+          <div className="flex items-center gap-2 shrink-0 cursor-pointer">
+            <div className="w-8 h-8 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-lg flex items-center justify-center shadow-sm">
+              <span className="text-white font-extrabold text-xs tracking-wider">SL</span>
             </div>
-            <span className="font-bold text-slate-800 text-lg hidden sm:block">
-              Skill<span className="text-indigo-600">Swap</span>
-              <span className="text-slate-400 font-normal text-sm ml-1">Campus</span>
+            <span className="font-extrabold text-slate-800 text-lg hidden sm:block tracking-tight">
+              Swap<span className="text-indigo-600">Ledge</span>
+              <span className="text-slate-400 font-medium text-xs ml-1 uppercase tracking-wider">Campus</span>
             </span>
           </div>
 
@@ -79,7 +79,7 @@ export default function Navbar({ activeTab, onTabChange, activeUser, searchQuery
               <img
                 src={activeUser.avatar}
                 alt={activeUser.name}
-                className="w-8 h-8 rounded-full border-2 border-indigo-200 bg-slate-100"
+                className="w-8 h-8 rounded-full border-2 border-indigo-200 bg-slate-100 object-cover"
               />
               <div className="hidden sm:block">
                 <p className="text-xs font-semibold text-slate-800 leading-none">{activeUser.name.split(' ')[0]}</p>

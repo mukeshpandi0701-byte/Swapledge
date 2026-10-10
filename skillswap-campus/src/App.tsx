@@ -4,6 +4,7 @@ import PeerCard from './components/PeerCard';
 import PeerFilter from './components/PeerFilter';
 import BookingModal from './components/BookingModal';
 import SessionsView from './components/SessionsView';
+import { StudyGroupsView } from './components/StudyGroupsView';
 import GroupCard from './components/GroupCard';
 import AssessmentView from './components/AssessmentView';
 import { ACTIVE_USER, MOCK_STUDENTS, INITIAL_SESSIONS, INITIAL_GROUPS, QUIZZES } from './data/mockData';
